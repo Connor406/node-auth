@@ -6,6 +6,8 @@ import { fileURLToPath } from "url"
 import { connectDb } from "./db.js"
 import { registerUser } from "./accounts/register.js"
 import { authorizeUser } from "./accounts/authorize.js"
+import fastifyCookie from "fastify-cookie"
+import { logUserIn } from "./accounts/logUserIn.js"
 
 // ESM specific things
 const __filename = fileURLToPath(import.meta.url)
@@ -15,6 +17,10 @@ const app = fastify()
 
 async function startApp() {
   try {
+    app.register(fastifyCookie, {
+      secret: process.env.COOKIE_SECRET,
+    })
+
     app.register(fastifyStatic, {
       root: path.join(__dirname, "public"),
     })
@@ -29,7 +35,22 @@ async function startApp() {
 
     app.post("/api/authorize", {}, async (request, reply) => {
       try {
-        const userId = await authorizeUser(request.body.email, request.body.password)
+        const { isAuthorized, userId } = await authorizeUser(
+          request.body.email,
+          request.body.password
+        )
+        if (isAuthorized) {
+          await logUserIn(userId, request, reply)
+        }
+        // generate auth tokens
+        // set cookie
+        reply
+          .setCookie("testCookie", "the value is this", {
+            httpOnly: true,
+            path: "/",
+            domain: "localhost",
+          })
+          .send({ data: "nice" })
       } catch (e) {
         console.log(e)
       }
