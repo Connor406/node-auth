@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^10.0.0",
     "fastify": "^3.19.2",
     "fastify-static": "^4.2.2",
