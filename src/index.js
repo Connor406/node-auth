@@ -8,6 +8,7 @@ import { registerUser } from "./accounts/register.js"
 import { authorizeUser } from "./accounts/authorize.js"
 import fastifyCookie from "fastify-cookie"
 import { logUserIn } from "./accounts/logUserIn.js"
+import { getUserFromCookie } from "./accounts/user.js"
 
 // ESM specific things
 const __filename = fileURLToPath(import.meta.url)
@@ -41,18 +42,22 @@ async function startApp() {
         )
         if (isAuthorized) {
           await logUserIn(userId, request, reply)
+          reply.send({ data: "User logged in" })
         }
-        // generate auth tokens
-        // set cookie
-        reply
-          .setCookie("testCookie", "the value is this", {
-            httpOnly: true,
-            path: "/",
-            domain: "localhost",
-          })
-          .send({ data: "nice" })
+        reply.send({ data: "User not authorized" })
       } catch (e) {
         console.log(e)
+      }
+    })
+
+    app.get("/test", {}, async (request, reply) => {
+      try {
+        // verify user login
+        const user = await getUserFromCookie(request)
+        // return user email, if it exists, otherwise return unauthorized
+        reply.send({ data: user })
+      } catch (e) {
+        throw new Error(e)
       }
     })
 
