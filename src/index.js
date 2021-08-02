@@ -10,6 +10,7 @@ import fastifyCookie from "fastify-cookie"
 import { logUserIn } from "./accounts/logUserIn.js"
 import { logUserOut } from "./accounts/logUserOut.js"
 import { getUserFromCookie } from "./accounts/user.js"
+import fastifyCors from "fastify-cors"
 
 // ESM specific things
 const __filename = fileURLToPath(import.meta.url)
@@ -19,6 +20,11 @@ const app = fastify()
 
 async function startApp() {
   try {
+    app.register(fastifyCors, {
+      origin: [/\.nodeauth.dev/, "https://nodeauth.dev"],
+      credentials: true,
+    })
+
     app.register(fastifyCookie, {
       secret: process.env.COOKIE_SECRET,
     })
