@@ -12,6 +12,7 @@ import { logUserOut } from "./accounts/logUserOut.js"
 import { getUserFromCookie } from "./accounts/user.js"
 import fastifyCors from "fastify-cors"
 import { sendEmail, mailInit } from "./mail/index.js"
+import { createVerifyEmailLink } from "./accounts/verify.js"
 
 // ESM specific things
 const __filename = fileURLToPath(import.meta.url)
@@ -22,7 +23,6 @@ const app = fastify()
 async function startApp() {
   try {
     await mailInit()
-    await sendEmail({ subject: "howdy there", html: "<h1>This is a different email</h1>" })
 
     app.register(fastifyCors, {
       origin: [/\.nodeauth.dev/, "https://nodeauth.dev"],
@@ -40,7 +40,15 @@ async function startApp() {
     app.post("/api/register", {}, async (request, reply) => {
       try {
         const userId = await registerUser(request.body.email, request.body.password)
+        // If account was created successfully
         if (userId) {
+          const emailLink = await createVerifyEmailLink(request.body.email)
+          await sendEmail({
+            to: request.body.email,
+            subject: "Verify your email",
+            html: `<a href="${emailLink}">verify</a>`,
+          })
+
           await logUserIn(userId, request, reply)
           reply.send({
             data: {
@@ -109,7 +117,7 @@ async function startApp() {
     })
 
     await app.listen(3000)
-    console.log("🚀 Server listening at port: 3000")
+    console.log("💥💥💥 Server listening at port: 3000")
   } catch (err) {
     console.error(err)
   }
