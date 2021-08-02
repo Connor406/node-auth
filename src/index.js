@@ -55,12 +55,15 @@ async function startApp() {
         // verify user login
         const user = await getUserFromCookie(request)
         // return user email, if it exists, otherwise return unauthorized
-        reply.send({ data: user })
+        if (user._id) {
+          reply.send({ data: user })
+        } else {
+          reply.send({ data: "user lookup failed" })
+        }
       } catch (e) {
         throw new Error(e)
       }
     })
-
     await app.listen(3000)
     console.log("🚀 Server listening at port: 3000")
   } catch (err) {
