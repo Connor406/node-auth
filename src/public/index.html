@@ -25,7 +25,23 @@
       <button type="submit">Login</button>
     </form>
 
+    <br />
+    <hr />
+    <br />
+
+    <button onclick="logout()">Logout</button>
+
     <script>
+      async function logout() {
+        try {
+          const res = await fetch("/api/logout", {
+            method: "POST",
+          })
+        } catch (e) {
+          console.log(e)
+        }
+      }
+
       ;(() => {
         const registerForm = document.getElementById("register-form")
 
