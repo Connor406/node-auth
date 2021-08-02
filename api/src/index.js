@@ -12,7 +12,7 @@ import { logUserOut } from "./accounts/logUserOut.js"
 import { getUserFromCookie } from "./accounts/user.js"
 import fastifyCors from "fastify-cors"
 import { sendEmail, mailInit } from "./mail/index.js"
-import { createVerifyEmailLink } from "./accounts/verify.js"
+import { createVerifyEmailLink, validateVerifyEmail } from "./accounts/verify.js"
 
 // ESM specific things
 const __filename = fileURLToPath(import.meta.url)
@@ -74,6 +74,22 @@ async function startApp() {
         })
       } catch (e) {
         console.log(e)
+      }
+    })
+
+    app.post("/api/verify", {}, async (request, reply) => {
+      try {
+        console.log("request: ", request.body)
+        const { token, email } = request.body
+        console.log("token & email: ", token, email)
+        const isValid = await validateVerifyEmail(token, email)
+        if (isValid) {
+          reply.code(200).send()
+        }
+
+        reply.code(401).send("did not work to verify")
+      } catch (e) {
+        reply.send({ data: { status: "failed" } })
       }
     })
 

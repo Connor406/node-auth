@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "cross-fetch": "^3.1.4",
     "fastify": "^3.20.0",
     "fastify-static": "^4.2.2"
   }
