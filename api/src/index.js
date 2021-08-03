@@ -13,7 +13,7 @@ import { getUserFromCookie, changePassword } from "./accounts/user.js"
 import fastifyCors from "fastify-cors"
 import { sendEmail, mailInit } from "./mail/index.js"
 import { createVerifyEmailLink, validateVerifyEmail } from "./accounts/verify.js"
-import { createResetLink } from "./accounts/resetPassword.js"
+import { createResetLink, validateResetEmail } from "./accounts/resetPassword.js"
 
 // ESM specific things
 const __filename = fileURLToPath(import.meta.url)
@@ -131,6 +131,27 @@ async function startApp() {
           })
         }
         reply.code(200).send()
+      } catch (e) {
+        reply.code(401).send()
+      }
+    })
+
+    app.post("/api/reset", {}, async (request, reply) => {
+      try {
+        const { email, password, token, expTime } = request.body
+        const isValid = await validateResetEmail(token, email, expTime)
+        // find user
+        if (isValid) {
+          const { user } = await import("./user/user.js")
+          const foundUser = await user.findOne({
+            "email.address": email,
+          })
+          if (foundUser._id) {
+            await changePassword(foundUser._id, password)
+            return reply.code(200).send("password updated")
+          }
+        }
+        reply.code(401).send("password reset failed")
       } catch (e) {
         reply.code(401).send()
       }
