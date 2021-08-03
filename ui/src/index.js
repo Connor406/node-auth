@@ -47,6 +47,10 @@ async function startApp() {
       }
     })
 
+    app.get("/reset/:email/:exp/:token", {}, async (request, reply) => {
+      return reply.sendFile("reset.html") // pushes router to reset.html file
+    })
+
     // SERVER STUFF
     const PORT = 5000
     await app.listen(PORT)

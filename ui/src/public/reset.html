@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>hello</h1>
+
+    <br />
+    <hr />
+    <br />
+
+    <h3>Reset Password</h3>
+    <form id="reset-password-form">
+      <input required type="password" placeholder="password" name="password" />
+      <button type="submit">Reset Password</button>
+    </form>
+
+    <script>
+      function getValues(form) {
+        return Object.values(form).reduce((obj, field) => {
+          if (field.name) {
+            obj[field.name] = field.value
+          }
+          return obj
+        }, {})
+      }
+
+      const resetPasswordForm = document.getElementById("reset-password-form")
+      resetPasswordForm.addEventListener("submit", reset)
+
+      function reset(e) {
+        e.preventDefault()
+        try {
+          const [email, time, token] = window.location.pathname.split("/").slice(-3)
+          const formValues = getValues(resetPasswordForm)
+          const values = {
+            ...formValues,
+            email: decodeURIComponent(email),
+            time,
+            token,
+          }
+          // const res = await fetch("https://api.nodeauth.dev/api/forgot-password", {
+          //   method: "POST",
+          //   body: JSON.stringify(values),
+          //   credentials: "include",
+          //   headers: { "Content-type": "application/json; charset=UTF-8" },
+          // })
+        } catch (err) {
+          console.error(err)
+        }
+      }
+    </script>
+  </body>
+</html>
