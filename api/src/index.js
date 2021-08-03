@@ -67,6 +67,22 @@ async function startApp() {
       }
     })
 
+    app.post("/api/2fa-verify", {}, async (request, reply) => {
+      try {
+        const { token, email, password } = request.body
+        console.log(token)
+        const { isAuthorized, userId, authenticatorSecret } = await authorizeUser(email, password)
+        const isValid = authenticator.verify({ token, secret: authenticatorSecret })
+        if (userId && isValid && isAuthorized) {
+          await logUserIn(userId, request, reply)
+          reply.code(200).send("successfully authenticated")
+        }
+        reply.code(401).send()
+      } catch (err) {
+        console.log(err)
+      }
+    })
+
     app.post("/api/register", {}, async (request, reply) => {
       try {
         const userId = await registerUser(request.body.email, request.body.password)
@@ -133,9 +149,7 @@ async function startApp() {
 
     app.post("/api/verify", {}, async (request, reply) => {
       try {
-        console.log("request: ", request.body)
         const { token, email } = request.body
-        console.log("token & email: ", token, email)
         const isValid = await validateVerifyEmail(token, email)
         if (isValid) {
           reply.code(200).send()
@@ -188,18 +202,17 @@ async function startApp() {
 
     app.post("/api/authorize", {}, async (request, reply) => {
       try {
-        const { isAuthorized, userId } = await authorizeUser(
+        const { isAuthorized, userId, authenticatorSecret } = await authorizeUser(
           request.body.email,
           request.body.password
         )
-        if (isAuthorized) {
+        if (isAuthorized && !authenticatorSecret) {
           await logUserIn(userId, request, reply)
+          reply.send({ data: { status: "successfully logged in", userId } })
+        } else if (isAuthorized && authenticatorSecret) {
+          reply.send({ data: { status: "2FA" } })
         }
-        reply.send({
-          data: {
-            status: "successfully logged in",
-          },
-        })
+        reply.code(402).send()
       } catch (e) {
         console.log(e)
         reply.send({
