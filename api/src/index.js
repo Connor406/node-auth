@@ -1,4 +1,5 @@
 import "./env.js"
+import { authenticator } from "@otplib/preset-default"
 import { fastify } from "fastify"
 import fastifyStatic from "fastify-static"
 import path from "path"
@@ -36,6 +37,31 @@ async function startApp() {
 
     app.register(fastifyStatic, {
       root: path.join(__dirname, "public"),
+    })
+
+    app.get("/api/user", {}, async (request, reply) => {
+      try {
+        const user = await getUserFromCookie(request, reply)
+        if (user) {
+          return reply.send({ data: { user } })
+        } else {
+          reply.send({})
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    })
+
+    app.post("/api/2fa-register", {}, async (request, reply) => {
+      try {
+        const user = await getUserFromCookie(request, reply)
+        const { token, secret } = request.body
+        const isValid = authenticator.verify({ token, secret })
+        console.log("2fa isValid: ", isValid)
+        reply.send(200)
+      } catch (err) {
+        console.log(err)
+      }
     })
 
     app.post("/api/register", {}, async (request, reply) => {

@@ -51,6 +51,10 @@ async function startApp() {
       return reply.sendFile("reset.html") // pushes router to reset.html file
     })
 
+    app.get("/2fa", {}, async (request, reply) => {
+      reply.sendFile("2fa.html")
+    })
+
     // SERVER STUFF
     const PORT = 5000
     await app.listen(PORT)
