@@ -28,14 +28,25 @@
     <br />
     <hr />
     <br />
+    <h3>Change Password</h3>
+    <form id="change-form">
+      <input type="password" placeholder="old password" name="oldPassword" />
+      <input type="password" placeholder="new password" name="newPassword" />
+      <button type="submit">Change Password</button>
+    </form>
+
+    <br />
+    <hr />
+    <br />
 
     <button onclick="logout()">Logout</button>
 
     <script>
       async function logout() {
         try {
-          const res = await fetch("/api/logout", {
+          const res = await fetch("https://api.nodeauth.dev/api/logout", {
             method: "POST",
+            credentials: "include",
           })
         } catch (e) {
           console.log(e)
@@ -76,6 +87,27 @@
               return obj
             }, {})
             const res = await fetch("https://api.nodeauth.dev/api/authorize", {
+              method: "POST",
+              body: JSON.stringify(values),
+              credentials: "include",
+              headers: { "Content-type": "application/json; charset=UTF-8" },
+            })
+          } catch (err) {
+            console.error(err)
+          }
+        })
+
+        const changePwForm = document.getElementById("change-form")
+        changePwForm.addEventListener("submit", async e => {
+          e.preventDefault()
+          try {
+            const values = Object.values(changePwForm).reduce((obj, field) => {
+              if (field.name) {
+                obj[field.name] = field.value
+              }
+              return obj
+            }, {})
+            const res = await fetch("https://api.nodeauth.dev/api/change-password", {
               method: "POST",
               body: JSON.stringify(values),
               credentials: "include",

@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken"
 import mongo from "mongodb"
 import { session } from "../session/session.js"
 import { createTokens } from "./tokens.js"
+import bcrypt from "bcryptjs"
+const { genSalt, hash } = bcrypt
 
 const { ObjectId } = mongo
 
@@ -21,7 +23,7 @@ export async function getUserFromCookie(request, reply) {
         _id: ObjectId(decodedAccessToken?.userId),
       })
     }
-    //! if there is no access token, but there is a refresh token!!
+    // if there is no access token, but there is a refresh token
     if (request?.cookies?.refreshToken) {
       const { refreshToken } = request.cookies
       // decode refresh token
@@ -69,5 +71,27 @@ export async function refreshTokens(sessionToken, userId, reply) {
       })
   } catch (e) {
     console.error(e)
+  }
+}
+
+export async function changePassword(userId, newPassword) {
+  try {
+    const { user } = await import("../user/user.js") // get user
+    // generate salt
+    const salt = await genSalt(10)
+    // hash w/ salt
+    const hashedPw = await hash(newPassword, salt)
+    return user.updateOne(
+      {
+        _id: userId,
+      },
+      {
+        $set: {
+          password: hashedPw,
+        },
+      }
+    )
+  } catch (err) {
+    console.log(err)
   }
 }

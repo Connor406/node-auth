@@ -9,7 +9,7 @@ import { authorizeUser } from "./accounts/authorize.js"
 import fastifyCookie from "fastify-cookie"
 import { logUserIn } from "./accounts/logUserIn.js"
 import { logUserOut } from "./accounts/logUserOut.js"
-import { getUserFromCookie } from "./accounts/user.js"
+import { getUserFromCookie, changePassword } from "./accounts/user.js"
 import fastifyCors from "fastify-cors"
 import { sendEmail, mailInit } from "./mail/index.js"
 import { createVerifyEmailLink, validateVerifyEmail } from "./accounts/verify.js"
@@ -74,6 +74,30 @@ async function startApp() {
         })
       } catch (e) {
         console.log(e)
+      }
+    })
+
+    app.post("/api/change-password", {}, async (request, reply) => {
+      try {
+        const { oldPassword, newPassword } = request.body
+        // verify user login
+        const user = await getUserFromCookie(request, reply)
+        if (user?.email?.address) {
+          // compare current logged in user with form to re-auth
+          const { isAuthorized, userId } = await authorizeUser(
+            user.email.address, // comes from database, not from frontend form
+            oldPassword // this does come from the form
+          )
+          // if User is who they say, change PW in DB
+          if (isAuthorized) {
+            await changePassword(userId, newPassword)
+            return reply.code(200).send("nice, you successfully changed pw")
+          }
+        }
+        return reply.code(401).send()
+      } catch (e) {
+        console.log(e)
+        return reply.code(401).send()
       }
     })
 
