@@ -10,7 +10,7 @@ import { authorizeUser } from "./accounts/authorize.js"
 import fastifyCookie from "fastify-cookie"
 import { logUserIn } from "./accounts/logUserIn.js"
 import { logUserOut } from "./accounts/logUserOut.js"
-import { getUserFromCookie, changePassword } from "./accounts/user.js"
+import { getUserFromCookie, changePassword, register2FA } from "./accounts/user.js"
 import fastifyCors from "fastify-cors"
 import { sendEmail, mailInit } from "./mail/index.js"
 import { createVerifyEmailLink, validateVerifyEmail } from "./accounts/verify.js"
@@ -57,8 +57,11 @@ async function startApp() {
         const user = await getUserFromCookie(request, reply)
         const { token, secret } = request.body
         const isValid = authenticator.verify({ token, secret })
-        console.log("2fa isValid: ", isValid)
-        reply.send(200)
+        if (user._id && isValid) {
+          await register2FA(user._id, secret)
+          reply.code(200).send("successfully authenticated")
+        }
+        reply.code(401).send()
       } catch (err) {
         console.log(err)
       }
