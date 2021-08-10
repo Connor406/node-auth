@@ -8,6 +8,7 @@ import { connectDb } from "./db.js"
 import { registerUser } from "./accounts/register.js"
 import { authorizeUser } from "./accounts/authorize.js"
 import fastifyCookie from "fastify-cookie"
+import fastifyAxios from "fastify-axios"
 import { logUserIn } from "./accounts/logUserIn.js"
 import { logUserOut } from "./accounts/logUserOut.js"
 import { getUserFromCookie, changePassword, register2FA } from "./accounts/user.js"
@@ -27,13 +28,15 @@ async function startApp() {
     await mailInit()
 
     app.register(fastifyCors, {
-      origin: [/\.nodeauth.dev/, "https://nodeauth.dev"],
+      origin: [/\.nodeauth.dev/, "https://nodeauth.dev", "https://api.nodeauth.dev"],
       credentials: true,
     })
 
     app.register(fastifyCookie, {
       secret: process.env.COOKIE_SECRET,
     })
+
+    app.register(fastifyAxios, {})
 
     app.register(fastifyStatic, {
       root: path.join(__dirname, "public"),
@@ -238,8 +241,9 @@ async function startApp() {
       }
     })
 
-    await app.listen(3000)
-    console.log("💥💥💥 Server listening at port: 3000")
+    const PORT = 3000
+    await app.listen(PORT)
+    console.log(`💥💥💥 Server listening at port: ${PORT}`)
   } catch (err) {
     console.error(err)
   }
